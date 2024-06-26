@@ -84,8 +84,6 @@ def _hash(key, offset):
     # It is provided only to facilitate testing.
     return lhash(key, offset)
 
-cdef module_to_instrument = 'tensorflow'
-
 cdef object trace
 def trace(frame, event, arg):
     global prev_location, tstl_mode
@@ -102,6 +100,7 @@ def trace(frame, event, arg):
     afl_area[offset] += 1
     # TODO: make it configurable which modules are instrumented, and which are not
     module = frame.f_globals.get('__name__')
+    module_to_instrument = 'tensorflow'
     if not module.beginswith(module_to_instrument):
         return None
     return trace
