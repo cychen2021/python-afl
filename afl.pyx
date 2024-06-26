@@ -56,6 +56,7 @@ from libc.stdint cimport uint32_t
 from libc.stdlib cimport getenv
 from libc.string cimport strlen
 from posix.signal cimport sigaction, sigaction_t, sigemptyset
+import inspect
 
 cdef extern from 'sys/shm.h':
     unsigned char *shmat(int shmid, void *shmaddr, int shmflg)
@@ -83,6 +84,8 @@ def _hash(key, offset):
     # It is provided only to facilitate testing.
     return lhash(key, offset)
 
+cdef module_to_instrument = 'tensorflow'
+
 cdef object trace
 def trace(frame, event, arg):
     global prev_location, tstl_mode
@@ -98,6 +101,9 @@ def trace(frame, event, arg):
     prev_location = location // 2
     afl_area[offset] += 1
     # TODO: make it configurable which modules are instrumented, and which are not
+    module = frame.f_globals.get('__name__')
+    if not module.beginswith(module_to_instrument):
+        return None
     return trace
 
 cdef int except_signal_id = 0
