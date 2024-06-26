@@ -86,6 +86,10 @@ def _hash(key, offset):
 
 cdef object trace
 def trace(frame, event, arg):
+    module_to_trace = 'tensorflow'
+    module = frame.f_globals.get('__name__')
+    if not module.startswith(module_to_trace):
+        return None
     global prev_location, tstl_mode
     cdef unsigned int location, offset
     cdef object filename = frame.f_code.co_filename
@@ -99,10 +103,6 @@ def trace(frame, event, arg):
     prev_location = location // 2
     afl_area[offset] += 1
     # TODO: make it configurable which modules are instrumented, and which are not
-    module = frame.f_globals.get('__name__')
-    module_to_instrument = 'tensorflow'
-    if not module.beginswith(module_to_instrument):
-        return None
     return trace
 
 cdef int except_signal_id = 0
